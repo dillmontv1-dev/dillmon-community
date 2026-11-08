@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080d19">
+<title>DILLMON — 회원가입</title>
+<style>
+:root{color-scheme:dark;--bg:#080d19;--panel:#101a2c;--line:#20304b;--muted:#8c9bb5;--blue:#4ca6ff;--white:#edf5ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#18345a 0,transparent 55%),var(--bg);color:var(--white);font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+.wrap{width:min(100% - 32px,1180px);margin:auto}.top{height:76px;border-bottom:1px solid #ffffff12;display:flex;align-items:center;justify-content:space-between}.logo{font-weight:950;letter-spacing:3px;font-size:25px}.logo i{color:var(--blue);font-style:normal}.back{color:#b8c8df;text-decoration:none;font-size:13px}.main{flex:1;display:grid;place-items:center;padding:34px 0}.card{width:min(100%,460px);padding:clamp(22px,5vw,36px);background:linear-gradient(145deg,#111e33,#0d1626);border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 70px #0005}.eyebrow{color:var(--blue);font-size:11px;letter-spacing:3px;font-weight:800}.card h1{font-size:30px;margin:12px 0 8px}.desc{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 25px}.label{display:block;color:#b9c8dc;font-size:12px;font-weight:700;margin:16px 0 7px}.field{width:100%;min-height:49px;background:#091321;border:1px solid #293d5b;border-radius:9px;padding:13px 14px;color:white;font-size:16px;outline:none}.field:focus{border-color:#4ca6ff;box-shadow:0 0 0 3px #4ca6ff20}.field::placeholder{color:#657792}.hint{color:#778aa6;font-size:11px;margin-top:7px}.submit{width:100%;min-height:50px;margin-top:24px;border:0;border-radius:9px;background:linear-gradient(110deg,#1876d5,#48adff);color:#06101d;font-size:15px;font-weight:850}.submit:disabled{opacity:.55}.message{min-height:22px;margin-top:14px;color:#9db2ce;font-size:12px;line-height:1.6}.bottom{text-align:center;margin-top:20px;color:#8799b3;font-size:12px}.bottom a{color:#65b7ff;text-decoration:none;font-weight:700}.footer{text-align:center;color:#63738d;font-size:11px;padding:22px 0;border-top:1px solid #ffffff12}
+@media(max-width:520px){.top{height:64px}.card h1{font-size:27px}.main{align-items:start;padding-top:34px}.field{min-height:52px}}
+</style>
+</head>
+<body>
+<header class="top wrap"><a href="index.html" class="logo" style="text-decoration:none;color:inherit">DILLM<i>O</i>N</a><a class="back" href="index.html">← 메인으로</a></header>
+<main class="main wrap"><section class="card">
+<div class="eyebrow">DILLMON COMMUNITY</div><h1>회원가입</h1><p class="desc">딜몬 커뮤니티에 가입하고 FC 온라인 이야기를 함께 나눠보세요.</p>
+<form id="signupForm">
+<label class="label" for="nickname">닉네임</label><input class="field" id="nickname" maxlength="20" autocomplete="nickname" placeholder="커뮤니티에서 사용할 닉네임" required>
+<label class="label" for="email">이메일 주소</label><input class="field" id="email" type="email" autocomplete="email" placeholder="로그인에 사용할 이메일" required>
+<label class="label" for="password">비밀번호</label><input class="field" id="password" type="password" minlength="6" autocomplete="new-password" placeholder="6자 이상 입력해 주세요" required><div class="hint">비밀번호는 6자 이상으로 설정해 주세요.</div>
+<label class="label" for="passwordConfirm">비밀번호 확인</label><input class="field" id="passwordConfirm" type="password" minlength="6" autocomplete="new-password" placeholder="비밀번호를 한 번 더 입력해 주세요" required>
+<button class="submit" id="submitBtn" type="submit">가입하기</button><div class="message" id="message" role="status"></div>
+</form><div class="bottom">이미 계정이 있나요? <a href="index.html#authPanel">로그인하기</a></div>
+</section></main><footer class="footer">DILLMON COMMUNITY · MADE FOR FC ONLINE PLAYERS</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient("https://yyqeneantgzdhwsguaye.supabase.co","sb_publishable_7hQxVhQhKPs9B9IsMJQ2Pw_PXC2zXw_");
+const form=document.getElementById("signupForm"),message=document.getElementById("message"),button=document.getElementById("submitBtn");
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const nickname=document.getElementById("nickname").value.trim(),email=document.getElementById("email").value.trim(),password=document.getElementById("password").value,passwordConfirm=document.getElementById("passwordConfirm").value;
+ if(!nickname){message.textContent="닉네임을 입력해 주세요.";return}
+ if(password.length<6){message.textContent="비밀번호는 6자 이상이어야 해요.";return}
+ if(password!==passwordConfirm){message.textContent="비밀번호가 서로 일치하지 않아요.";return}
+ button.disabled=true;button.textContent="가입 처리 중...";
+ const {data,error}=await db.auth.signUp({email,password,options:{data:{nickname},emailRedirectTo:location.origin+"/index.html"}});
+ button.disabled=false;button.textContent="가입하기";
+ if(error){message.style.color="#ff9b9b";message.textContent=error.message;return}
+ if(data.session){message.style.color="#8fe0b0";message.textContent="가입이 완료됐어요! 메인 페이지로 이동합니다.";setTimeout(()=>location.href="index.html",1000)}
+ else{message.style.color="#8fe0b0";message.textContent="가입 확인 메일을 보냈어요. 이메일 인증을 마친 뒤 메인 페이지에서 로그인해 주세요."}
+});
+</script>
+</body></html>
