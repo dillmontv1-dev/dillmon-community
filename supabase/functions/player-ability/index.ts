@@ -82,7 +82,9 @@ Deno.serve(async (req) => {
     const name = extractOne(html, /<div\b[^>]*class=["'][^"']*\bname\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
     const ovr = extractOne(html, /<div\b[^>]*class=["'][^"']*\bovr\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
     const position = extractOne(html, /<div\b[^>]*class=["'][^"']*\bposition\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
-    return new Response(JSON.stringify({ name, ovr: Number(ovr) || null, position, spid, grade, stats, source: "Nexon DataCenter (비공식·비문서화 조회 경로)", fetchedAt: new Date().toISOString() }), { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" } });
+    const salaryText = extractOne(html, /<div\b[^>]*class=["'][^"']*\bpay\b[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i) || extractOne(html, /<div\b[^>]*class=["'][^"']*\bpay_side\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+    const salary = Number(salaryText.replace(/[^0-9]/g, "")) || null;
+    return new Response(JSON.stringify({ name, ovr: Number(ovr) || null, position, salary, spid, grade, stats, source: "Nexon DataCenter (비공식·비문서화 조회 경로)", fetchedAt: new Date().toISOString() }), { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" } });
   } catch (error) {
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "선수 능력치를 불러오지 못했어요." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
