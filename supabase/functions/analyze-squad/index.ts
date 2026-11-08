@@ -9,6 +9,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const formationSlots: Record<string, string[]> = {
+  "4-2-2-2": ["ST", "ST", "LM", "RM", "CDM", "CDM", "LB", "CB", "CB", "RB", "GK"],
+  "4-2-3-1": ["ST", "LAM", "CAM", "RAM", "CDM", "CDM", "LB", "CB", "CB", "RB", "GK"],
+  "4-3-3": ["LW", "ST", "RW", "CM", "CDM", "CM", "LB", "CB", "CB", "RB", "GK"],
+  "4-1-2-1-2": ["ST", "ST", "CAM", "CM", "CM", "CDM", "LB", "CB", "CB", "RB", "GK"],
+  "3-5-2": ["ST", "ST", "LM", "CM", "CAM", "CM", "RM", "CB", "CB", "CB", "GK"],
+};
+
 const schema = {
   type: "object",
   additionalProperties: false,
@@ -95,6 +103,7 @@ Deno.serve(async (req) => {
     const players = Array.isArray(squad.players) ? squad.players.slice(0, 11) : [];
     const safePlayers = players.map((p: any, index: number) => ({
       slot: index + 1,
+      position: formationSlots[String(squad.formation || "")]?.[index] || "미지정",
       name: String(p?.name || "").slice(0, 80),
       season: String(p?.season || "").slice(0, 50),
       grade: String(p?.grade || "").slice(0, 30),
@@ -105,10 +114,12 @@ Deno.serve(async (req) => {
       squadName: String(squad.name || "이름 없는 스쿼드").slice(0, 80),
       formation: String(squad.formation || "").slice(0, 30),
       players: safePlayers,
+      totalWage: safePlayers.reduce((sum: number, player: any) => sum + (player.wage || 0), 0),
       evaluationRules: [
         "평가는 제공된 포메이션, 선수 이름, 시즌, 강화 등급, 급여, 배치 순서만 근거로 한다.",
         "실제 게임 내 능력치, 가격, 메타 티어, 체감, 약발, 개인기, 특성, 팀컬러 수치는 입력되지 않았다면 절대 아는 척하거나 만들어내지 않는다.",
-        "포지션 적합성은 입력된 슬롯 위치와 포메이션 구조를 기준으로 제한적으로 평가한다.",
+        "포지션 적합성은 각 선수에 함께 제공된 position 슬롯과 포메이션 구조를 기준으로 평가한다.",
+        "급여 상한이나 공식 급여 제한 수치는 입력되지 않았다. 상한 대비 효율을 단정하지 말고 선수 간 급여 분포만 제한적으로 참고하며, 근거가 부족하면 중립적으로 평가한다.",
         "선수 정보가 부족하면 해당 항목은 보수적으로 평가하고 summary 또는 recommendations에 데이터 한계를 알린다.",
         "score는 5개 dimension의 균형을 종합한 0~100 평가이며 실제 승률이나 공식 게임 점수가 아니다.",
         "칭찬만 하지 말고 강점, 약점, 개선 우선순위를 구체적이고 공정하게 작성한다.",
