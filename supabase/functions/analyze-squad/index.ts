@@ -21,16 +21,15 @@ const schema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    score: { type: "integer", minimum: 0, maximum: 100 },
+    score: { type: "integer" },
     dimensions: {
       type: "object",
-      additionalProperties: false,
-      properties: {
-        formationFit: { type: "integer", minimum: 0, maximum: 100 },
-        positionalBalance: { type: "integer", minimum: 0, maximum: 100 },
-        squadCompleteness: { type: "integer", minimum: 0, maximum: 100 },
-        wageEfficiency: { type: "integer", minimum: 0, maximum: 100 },
-        squadCohesion: { type: "integer", minimum: 0, maximum: 100 },
+        properties: {
+        formationFit: { type: "integer" },
+        positionalBalance: { type: "integer" },
+        squadCompleteness: { type: "integer" },
+        wageEfficiency: { type: "integer" },
+        squadCohesion: { type: "integer" },
       },
       required: ["formationFit", "positionalBalance", "squadCompleteness", "wageEfficiency", "squadCohesion"],
     },
