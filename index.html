@@ -85,7 +85,7 @@ async function loadPlayerAbility(){
  const grade=document.getElementById('playerGrade').value||'+1';
  const panel=document.getElementById('playerAbilityPanel');
  const button=document.getElementById('loadPlayerAbilityBtn');
- if(!/^\\d{9}$/.test(spid)){panel.classList.add('show');panel.innerHTML='<div class="player-ability-message">먼저 넥슨 선수 검색에서 선수를 선택해 주세요.</div>';return}
+ if(!/^\d{9}$/.test(spid)){panel.classList.add('show');panel.innerHTML='<div class="player-ability-message">먼저 넥슨 선수 검색에서 선수를 선택해 주세요.</div>';return}
  if(!currentUser){panel.classList.add('show');panel.innerHTML='<div class="player-ability-message">능력치 조회는 로그인 후 이용할 수 있어요.</div>';return}
  const token=++playerAbilityRequestToken;
  panel.classList.add('show');panel.innerHTML='<div class="player-ability-message">넥슨 데이터센터에서 '+esc(document.getElementById('playerName').value)+' 선수의 '+esc(grade)+' 능력치를 불러오는 중...</div>';
