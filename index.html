@@ -126,13 +126,26 @@ function searchNexonPlayers(){
    await loadNexonPlayerMeta();
    if(token!==nexonSearchToken)return;
    const q=query.toLocaleLowerCase();
-   const matches=nexonSpidMeta.filter(x=>String(x.name||'').toLocaleLowerCase().includes(q)).slice(0,40);
+   const matches=nexonSpidMeta.filter(x=>String(x.name||'').toLocaleLowerCase().includes(q)).slice(0,12);
    if(!matches.length){results.innerHTML='<div class="nexon-search-empty">검색 결과가 없어요. 선수 이름을 확인해 주세요.</div>';status.textContent='검색 결과 0명';return}
+   const grade=document.getElementById('playerGrade').value||'+1';
    results.innerHTML=matches.map(x=>{
     const id=String(x.id),seasonId=id.slice(0,3),season=nexonSeasonName(seasonId),image=NEXON_PLAYER_IMAGE_BASE+id+'.png';
-    return '<button type="button" class="nexon-player-result" onclick="selectNexonPlayer(\''+id+'\')"><img src="'+image+'" data-fallback="'+nexonImageFallback(id.slice(3))+'" data-season-fallback="'+esc(nexonSeasonImage(seasonId))+'" alt="" loading="lazy" onerror="handleNexonImageError(this)"><span><strong>'+esc(x.name)+'</strong><small>'+esc(season)+' · SPID '+esc(id)+'</small></span></button>'
+    return '<button type="button" class="nexon-player-result" onclick="selectNexonPlayer(\''+id+'\')"><img src="'+image+'" data-fallback="'+nexonImageFallback(id.slice(3))+'" data-season-fallback="'+esc(nexonSeasonImage(seasonId))+'" alt="" loading="lazy" onerror="handleNexonImageError(this)"><span><strong>'+esc(x.name)+'</strong><small>'+esc(season)+' · OVR <b id="searchOvr_'+id+'">조회 중</b></small></span></button>'
    }).join('');
-   status.textContent='검색 결과 '+matches.length+'명';
+   status.textContent='검색 결과 '+matches.length+'명 · OVR 확인 중';
+   if(currentUser){
+    await Promise.all(matches.map(async x=>{
+     const id=String(x.id),target=document.getElementById('searchOvr_'+id);
+     if(!target)return;
+     try{const response=await db.functions.invoke('player-ability',{body:{spid:id,grade}});if(token!==nexonSearchToken)return;const value=response.data?.ovr;if(response.error||!value)target.textContent='—';else target.textContent=String(value)}
+     catch(e){if(token===nexonSearchToken&&target.isConnected)target.textContent='—'}
+    }));
+    if(token===nexonSearchToken)status.textContent='검색 결과 '+matches.length+'명 · OVR 표시 완료';
+   }else{
+    matches.forEach(x=>{const target=document.getElementById('searchOvr_'+String(x.id));if(target)target.textContent='로그인 필요'});
+    status.textContent='OVR 조회는 로그인 후 이용할 수 있어요';
+   }
   }catch(e){results.innerHTML='<div class="nexon-search-empty">선수 데이터를 불러오지 못했어요: '+esc(e.message)+'</div>';status.textContent='데이터 연결 오류'}
  },250);
 }
