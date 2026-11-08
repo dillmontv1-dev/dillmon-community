@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
             responseMimeType: "application/json",
             responseJsonSchema: schema,
             temperature: 0.25,
-            maxOutputTokens: 1800,
+            maxOutputTokens: 4096,
           },
         }),
       },
@@ -164,13 +164,35 @@ Deno.serve(async (req) => {
     }
 
     const aiJson = await aiResponse.json();
-    const outputText = aiJson.candidates?.[0]?.content?.parts
+    const candidate = aiJson.candidates?.[0];
+    const outputText = candidate?.content?.parts
       ?.map((part: any) => part.text || "")
       .join("")
       .trim();
-    if (!outputText) return json(502, { error: "AI 분석 결과를 읽지 못했습니다." });
+    if (!outputText) {
+      console.error("Gemini returned no text", {
+        finishReason: candidate?.finishReason || "unknown",
+        promptFeedback: aiJson.promptFeedback || null,
+      });
+      return json(502, { error: "AI 분석 결과가 비어 있습니다. 잠시 후 다시 시도해 주세요." });
+    }
 
-    const analysis = JSON.parse(outputText);
+    let analysis: any;
+    try {
+      analysis = JSON.parse(outputText);
+    } catch (parseError) {
+      console.error("Gemini returned invalid or truncated JSON", {
+        finishReason: candidate?.finishReason || "unknown",
+        outputLength: outputText.length,
+        outputTail: outputText.slice(-300),
+        parseError: String(parseError),
+      });
+      return json(502, {
+        error: candidate?.finishReason === "MAX_TOKENS"
+          ? "AI 분석 결과가 길이 제한으로 완성되지 않았습니다. 다시 저장해 주세요."
+          : "AI 분석 결과 형식이 올바르지 않습니다. 다시 시도해 주세요.",
+      });
+    }
     const dimensionValues = Object.values(analysis.dimensions || {});
     if (
       !Number.isInteger(analysis.score) || analysis.score < 0 || analysis.score > 100 ||
