@@ -1,6 +1,6 @@
 // Supabase Edge Function: analyze-squad
-// Required secrets: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
-// Optional secret: OPENAI_MODEL (defaults to gpt-5.5)
+// Required secrets: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, GEMINI_API_KEY
+// Optional secret: GEMINI_MODEL (defaults to gemini-3.6-flash)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -61,9 +61,9 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const openAiKey = Deno.env.get("OPENAI_API_KEY");
-    const model = Deno.env.get("OPENAI_MODEL") || "gpt-5.5";
-    if (!supabaseUrl || !anonKey || !serviceKey || !openAiKey) {
+    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.6-flash";
+    if (!supabaseUrl || !anonKey || !serviceKey || !geminiKey) {
       return json(503, { error: "AI 분석 서버 설정이 아직 완료되지 않았습니다." });
     }
 
@@ -127,37 +127,48 @@ Deno.serve(async (req) => {
       ],
     };
 
-    const aiResponse = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openAiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        instructions: "너는 FC 온라인 스쿼드 전술 분석가다. 주어진 데이터만 근거로 한국어 평가를 작성한다. 모르는 게임 데이터는 절대 추측하지 않는다.",
-        input: JSON.stringify(promptData),
-        text: {
-          format: {
-            type: "json_schema",
-            name: "dillmon_squad_analysis",
-            strict: true,
-            schema,
-          },
+    const aiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": geminiKey,
+          "Content-Type": "application/json",
         },
-      }),
-    });
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{
+              text: "너는 FC 온라인 스쿼드 전술 분석가다. 주어진 데이터만 근거로 한국어 평가를 작성한다. 모르는 게임 데이터는 절대 추측하지 않는다. 반드시 지정된 JSON 형식으로만 답한다.",
+            }],
+          },
+          contents: [{
+            role: "user",
+            parts: [{ text: JSON.stringify(promptData) }],
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseJsonSchema: schema,
+            temperature: 0.25,
+            maxOutputTokens: 1800,
+          },
+        }),
+      },
+    );
 
     if (!aiResponse.ok) {
       const detail = await aiResponse.text();
-      console.error("OpenAI API error", aiResponse.status, detail.slice(0, 1000));
-      return json(502, { error: "AI 분석 요청에 실패했습니다. 잠시 후 다시 시도해 주세요." });
+      console.error("Gemini API error", aiResponse.status, detail.slice(0, 1200));
+      let message = "Gemini AI 분석 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+      if (aiResponse.status === 429) message = "Gemini 무료 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나 AI Studio 사용량 한도를 확인해 주세요.";
+      if (aiResponse.status === 400 || aiResponse.status === 403) message = "Gemini API 키, 프로젝트 또는 모델 설정을 확인해 주세요.";
+      return json(502, { error: message });
     }
 
     const aiJson = await aiResponse.json();
-    const outputText = aiJson.output_text || (aiJson.output || [])
-      .flatMap((item: any) => item.content || [])
-      .find((item: any) => item.type === "output_text")?.text;
+    const outputText = aiJson.candidates?.[0]?.content?.parts
+      ?.map((part: any) => part.text || "")
+      .join("")
+      .trim();
     if (!outputText) return json(502, { error: "AI 분석 결과를 읽지 못했습니다." });
 
     const analysis = JSON.parse(outputText);
