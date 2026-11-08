@@ -1,6 +1,6 @@
 # DILLMON AI Squad Analysis — Setup
 
-The website integration is committed, but AI analysis will remain pending until the Supabase database migration, Edge Function, and OpenAI secret are configured.
+The website integration is committed, but AI analysis will remain pending until the Supabase database migration, Edge Function, and Gemini API secret are configured.
 
 ## 1. Apply the database migration
 
@@ -10,14 +10,17 @@ Open the Supabase project SQL Editor for project `yyqeneantgzdhwsguaye` and run 
 
 The table is publicly readable so the public Squad Ratings page can show completed analyses. There are no client write policies; only the Edge Function's service-role client writes scores.
 
-## 2. Add the OpenAI API key as a Supabase secret
+## 2. Create a Gemini API key and add it as a Supabase secret
 
 In Supabase Dashboard → Edge Functions → Secrets, add:
 
-- `OPENAI_API_KEY`: your OpenAI API key
-- `OPENAI_MODEL` (optional): `gpt-5.5`
+1. Open [Google AI Studio API keys](https://aistudio.google.com/apikey).
+2. Create an API key in a project eligible for the Gemini API free tier.
+3. In Supabase Dashboard → Edge Functions → Secrets, add:
+   - `GEMINI_API_KEY`: your Gemini API key
+   - `GEMINI_MODEL` (optional): `gemini-3.6-flash`
 
-Never put the OpenAI API key in `index.html`, Vercel environment variables exposed to browser code, or GitHub source.
+Never put the Gemini API key in `index.html`, Vercel environment variables exposed to browser code, or GitHub source. The free tier has rate limits and its data-use terms differ from paid usage; check Google's current pricing and terms before using real user data.
 
 Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions automatically.
 
