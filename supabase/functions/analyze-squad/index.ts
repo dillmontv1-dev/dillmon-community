@@ -84,8 +84,11 @@ function clamp(value: number, min = 0, max = 100) {
 }
 
 function parseGrade(value: unknown) {
-  const parsed = Number.parseInt(String(value ?? "1").replace(/[^0-9]/g, ""), 10);
-  return clamp(Number.isFinite(parsed) ? parsed : 1, 1, 13);
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw.replace(/[^0-9]/g, ""), 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 13) return null;
+  return parsed;
 }
 
 function normalizePosition(value: unknown) {
@@ -212,6 +215,9 @@ async function fetchPlayerFacts(
   }
 
   const grade = parseGrade(player?.grade);
+  if (!grade) {
+    return { ok: false, slot: index + 1, name, reason: "강화 등급이 선택되지 않았습니다. 실제 강화 등급을 선택해 주세요." };
+  }
   try {
     const response = await fetch(supabaseUrl.replace(/\/$/, "") + "/functions/v1/player-ability", {
       method: "POST",
