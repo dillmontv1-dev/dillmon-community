@@ -110,17 +110,19 @@ function statValue(stats: Array<{ name: string; value: number }>, name: string) 
 
 function playerGroupAverage(player: any, names: string[]) {
   const values = names.map((name) => statValue(player.stats, name)).filter((value): value is number => value !== null);
-  if (!values.length) return null;
+  const minimumValues = Math.max(3, Math.ceil(names.length * 0.45));
+  if (values.length < minimumValues) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function groupScore(players: any[], slots: Set<string>, names: string[], goalkeeper = false) {
-  const values = players
-    .filter((player) => slots.has(player.slotPosition))
-    .map((player) => playerGroupAverage(player, goalkeeper && player.slotPosition === "GK" ? goalkeeperStats : names))
-    .filter((value): value is number => value !== null);
-  if (!values.length) return null;
-  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const groupPlayers = players.filter((player) => slots.has(player.slotPosition));
+  if (!groupPlayers.length) return null;
+  const values = groupPlayers.map((player) =>
+    playerGroupAverage(player, goalkeeper && player.slotPosition === "GK" ? goalkeeperStats : names)
+  );
+  if (values.some((value) => value === null)) return null;
+  const average = (values as number[]).reduce((sum, value) => sum + value, 0) / values.length;
   return clamp(Math.round(average / 2));
 }
 
