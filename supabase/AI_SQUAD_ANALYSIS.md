@@ -51,6 +51,14 @@ It does not drop or rewrite existing squad or analysis records.
 2. **Nexon DataCenter player detail**  
    The existing `player-ability` Edge Function calls the public website's `/datacenter/PlayerAbility` endpoint with SPID and enhancement grade. It returns the current HTML-derived OVR, primary position, salary when parsable, and detailed stat name/value pairs. This is Nexon's own public DataCenter page, but the endpoint is **not a documented NEXON Open API contract**. Its HTML selectors can change without notice. The function labels the source as an undocumented DataCenter route and returns an error instead of fabricated data when the response cannot be parsed.
 
+Useful source URLs:
+
+- Official FC Online Open API catalogue: https://openapi.nexon.com/game/fconline/
+- Public player ID metadata: https://open.api.nexon.com/static/fconline/meta/spid.json
+- Public season metadata: https://open.api.nexon.com/static/fconline/meta/seasonid.json
+- Public position metadata: https://open.api.nexon.com/static/fconline/meta/spposition.json
+- Public DataCenter ability request used by the existing Edge Function: https://fconline.nexon.com/datacenter/PlayerAbility
+
 3. **Squad detail endpoint**  
    The mobile DataCenter's public `SquadGetInfo` response has been observed to include fields such as OVR, per-position OVR values, prices, height/weight, salary, player thumbnails and season artwork. It is tied to a DataCenter squad index and is not used as a general player lookup or treated as a supported Open API.
 
