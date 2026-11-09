@@ -19,7 +19,7 @@ const formationSlots: Record<string, string[]> = {
   "4-2-3-1": ["ST", "LAM", "CAM", "RAM", "CDM", "CDM", "LB", "CB", "CB", "RB", "GK"],
   "4-3-3": ["LW", "ST", "RW", "CM", "CDM", "CM", "LB", "CB", "CB", "RB", "GK"],
   "4-1-2-1-2": ["ST", "ST", "CAM", "CM", "CM", "CDM", "LB", "CB", "CB", "RB", "GK"],
-  "3-5-2": ["ST", "ST", "LM", "CM", "CAM", "CM", "RM", "CB", "CB", "GK"],
+  "3-5-2": ["ST", "ST", "LM", "CM", "CAM", "CM", "RM", "CB", "CB", "CB", "GK"],
 };
 
 const explanationSchema = {
@@ -222,7 +222,7 @@ async function fetchPlayerFacts(
       signal: AbortSignal.timeout(20000),
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok || !Array.isArray(result?.stats) || result.stats.length < 20 || !Number(result?.ovr)) {
+    if (!response.ok || !Array.isArray(result?.stats) || result.stats.length < 20 || !Number(result?.ovr) || !normalizePosition(result?.position)) {
       return {
         ok: false,
         slot: index + 1,
