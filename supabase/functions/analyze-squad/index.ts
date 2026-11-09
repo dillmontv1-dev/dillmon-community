@@ -101,7 +101,7 @@ function normalizeStatName(value: unknown) {
 function statValue(stats: Array<{ name: string; value: number }>, name: string) {
   const aliases: Record<string, string[]> = {
     "발리슛": ["발리슛", "발리 슛"],
-    "GK반응속도": ["GK 반응속도", "골키퍼 반응속도"],
+    "gk반응속도": ["GK 반응속도", "골키퍼 반응속도"],
   };
   const candidates = [name, ...(aliases[normalizeStatName(name)] || [])].map(normalizeStatName);
   const found = stats.find((item) => candidates.includes(normalizeStatName(item.name)));
