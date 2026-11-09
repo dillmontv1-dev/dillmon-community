@@ -98,5 +98,5 @@ begin
       on public.squad_analyses for select
       using (true);
   end if;
-end
-$$;
+end;
+$;
