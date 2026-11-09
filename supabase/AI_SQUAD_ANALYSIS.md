@@ -67,7 +67,7 @@ Useful source URLs:
 
 ## Version 2 scoring contract
 
-The server requires all 11 slots to be filled and each player to have a valid 9-digit SPID. It then calls the authenticated `player-ability` Edge Function (three concurrent requests at a time). Each player must return a usable OVR, primary position and at least 20 detailed attributes. If any player fails, no score is saved; the public gallery continues to show **분석 대기**.
+The server requires all 11 slots to be filled, each player to have a valid 9-digit SPID, and an explicitly selected enhancement grade from +1 to +13. A blank grade is not silently treated as +1. It then calls the authenticated `player-ability` Edge Function (three concurrent requests at a time). Each player must return a usable OVR, primary position and at least 20 detailed attributes. If any player fails, no score is saved; the public gallery continues to show **분석 대기**.
 
 The five dimensions are calculated from the returned values:
 
