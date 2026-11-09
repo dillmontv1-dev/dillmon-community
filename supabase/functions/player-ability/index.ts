@@ -46,7 +46,12 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const spid = String(body.spid || "");
-    const grade = Math.min(13, Math.max(1, Number.parseInt(String(body.grade || "1").replace(/[^0-9]/g, ""), 10) || 1));
+    const gradeInput = String(body.grade || "").trim();
+    const parsedGrade = Number.parseInt(gradeInput.replace(/[^0-9]/g, ""), 10);
+    if (!gradeInput || !Number.isInteger(parsedGrade) || parsedGrade < 1 || parsedGrade > 13) {
+      return new Response(JSON.stringify({ error: "정확한 강화 등급을 +1~+13 사이에서 선택해 주세요." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const grade = parsedGrade;
     if (!/^\d{9}$/.test(spid)) {
       return new Response(JSON.stringify({ error: "선수 코드(SPID)가 올바르지 않습니다." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
